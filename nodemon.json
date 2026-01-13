@@ -1,0 +1,25 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "node_modules",
+    "dist",
+    "coverage",
+    "generated"
+  ],
+  "exec": "ts-node -r tsconfig-paths/register src/server.ts",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "restartable": "rs",
+  "delay": 1000,
+  "verbose": true,
+  "legacyWatch": false,
+  "signal": "SIGTERM",
+  "events": {
+    "restart": "echo '🔄 Server restarting due to file changes...'",
+    "crash": "echo '💥 Server crashed - waiting for file changes before restart...'"
+  }
+}
