@@ -1,26 +1,26 @@
 {
+  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    /* Language and Environment */
-    "target": "ES2022",
+   /* Language and Environment */
+    "target": "esnext",
     "lib": ["ES2022"],
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    "types": [],
     
-    /* Emit */
+
+     /* Emit */
     "outDir": "./dist",
     "rootDir": "./src",
     "removeComments": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    
-    /* Interop Constraints */
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    
+
+    // Stricter Typechecking Options
+    "exactOptionalPropertyTypes": true,
+
     /* Type Checking (STRICT MODE) */
     "strict": true,
     "noImplicitAny": true,
@@ -37,8 +37,8 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
-    
-    /* Path Aliases */
+
+     /* Path Aliases */
     "baseUrl": "./src",
     "paths": {
       "@modules/*": ["modules/*"],
@@ -46,8 +46,8 @@
       "@config/*": ["config/*"],
       "@types/*": ["types/*"]
     },
-    
-    /* Performance */
+
+     /* Performance */
     "skipLibCheck": true,
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
@@ -56,8 +56,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  
-  "include": [
+   "include": [
     "src/**/*"
   ],
   
