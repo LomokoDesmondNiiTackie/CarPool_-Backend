@@ -1,14 +1,341 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma Schema for CARPOOL Backend
+// Version: 1.0
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum UserRole {
+  RIDER
+  DRIVER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  MISSED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum BookingType {
+  DAILY
+  WEEKLY
+}
+
+enum BusStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RideSession {
+  MORNING
+  AFTERNOON
+}
+
+// ========================================
+// USERS & AUTH
+// ========================================
+
+model User {
+  id            String   @id @default(uuid())
+  fullName      String?
+  email         String   @unique
+  phoneNumber   String?  @unique
+  password      String?
+  role          UserRole @default(RIDER)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  riderProfile     RiderProfile?
+  driverProfile    DriverProfile?
+  wallet           Wallet?
+  bookings         Booking[]
+  transactions     Transaction[]
+  scannedQRCodes   QRScan[]        @relation("ScannedBy")
+  notifications    Notification[]
+  processedRefunds RefundRequest[] @relation("ProcessedBy")
+
+  @@index([email])
+  @@index([phoneNumber])
+}
+
+model RiderProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  homeLat            Float
+  homeLng            Float
+  workplaceLat       Float
+  workplaceLng       Float
+  preferredBusStopId String
+  createdAt          DateTime @default(now())
+
+  // Relations
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredBusStop BusStop @relation(fields: [preferredBusStopId], references: [id])
+
+  @@index([preferredBusStopId])
+}
+
+model DriverProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  companyName   String
+  licenseNumber String   @unique
+  verified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  busAssignments BusDriver[]
+
+  @@index([verified])
+}
+
+// ========================================
+// TRANSPORT STRUCTURE
+// ========================================
+
+model BusStop {
+  id        String   @id @default(uuid())
+  name      String
+  lat       Float
+  lng       Float
+  active    Boolean  @default(true)
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  riderProfiles RiderProfile[]
+  routeBusStops RouteBusStop[]
+
+  @@index([active])
+}
+
+model Route {
+  id        String      @id @default(uuid())
+  name      String
+  session   RideSession
+  createdAt DateTime    @default(now())
+
+  // Relations
+  routeBusStops RouteBusStop[]
+  buses         Bus[]
+  bookings      Booking[]
+
+  @@index([session])
+}
+
+model RouteBusStop {
+  id        String   @id @default(uuid())
+  routeId   String
+  busStopId String
+  stopOrder Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  route   Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  busStop BusStop @relation(fields: [busStopId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, busStopId])
+  @@unique([routeId, stopOrder])
+  @@index([routeId])
+  @@index([busStopId])
+}
+
+model Bus {
+  id          String    @id @default(uuid())
+  plateNumber String    @unique
+  capacity    Int
+  status      BusStatus @default(ACTIVE)
+  routeId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  route       Route           @relation(fields: [routeId], references: [id])
+  bookings    Booking[]
+  assignments BusAssignment[]
+  drivers     BusDriver[]
+
+  @@index([routeId])
+  @@index([status])
+}
+
+model BusDriver {
+  id         String   @id @default(uuid())
+  busId      String
+  driverId   String
+  assignedAt DateTime @default(now())
+
+  // Relations
+  bus    Bus           @relation(fields: [busId], references: [id], onDelete: Cascade)
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([busId, driverId])
+  @@index([busId])
+  @@index([driverId])
+}
+
+// ========================================
+// BOOKINGS (CORE)
+// ========================================
+
+model Booking {
+  id          String        @id @default(uuid())
+  riderId     String
+  routeId     String
+  busId       String?
+  bookingType BookingType
+  session     RideSession
+  rideDate    DateTime      @db.Date
+  status      BookingStatus @default(PENDING)
+  qrToken     String?       @unique
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  rider         User           @relation(fields: [riderId], references: [id])
+  route         Route          @relation(fields: [routeId], references: [id])
+  bus           Bus?           @relation(fields: [busId], references: [id])
+  transactions  Transaction[]
+  qrScans       QRScan[]
+  refundRequest RefundRequest?
+
+  @@unique([riderId, rideDate, session]) // One booking per rider per slot
+  @@index([riderId])
+  @@index([routeId])
+  @@index([busId])
+  @@index([rideDate, session])
+  @@index([status])
+}
+
+// ========================================
+// BUS CAPACITY CONTROL (CRITICAL)
+// ========================================
+
+model BusAssignment {
+  id          String      @id @default(uuid())
+  busId       String
+  rideDate    DateTime    @db.Date
+  session     RideSession
+  bookedCount Int         @default(0)
+  capacity    Int
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@unique([busId, rideDate, session]) // Prevent duplicate assignments
+  @@index([rideDate, session])
+}
+
+// ========================================
+// PAYMENTS & WALLET
+// ========================================
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Decimal  @default(0.00) @db.Decimal(10, 2)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id        String        @id @default(uuid())
+  userId    String
+  bookingId String
+  amount    Decimal       @db.Decimal(10, 2)
+  status    PaymentStatus @default(PENDING)
+  provider  String // MTN_MOMO
+  metadata  Json? // Store MoMo reference, etc.
+  createdAt DateTime      @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ========================================
+// QR & BOARDING CONFIRMATION
+// ========================================
+
+model QRScan {
+  id        String   @id @default(uuid())
+  bookingId String
+  scannedBy String
+  scannedAt DateTime @default(now())
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id])
+  scanner User    @relation("ScannedBy", fields: [scannedBy], references: [id])
+
+  @@unique([bookingId]) // One scan per booking
+  @@index([scannedAt])
+}
+
+// ========================================
+// NOTIFICATIONS
+// ========================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String
+  sent      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([sent])
+}
+
+// ========================================
+// ADMIN & REFUNDS
+// ========================================
+
+model RefundRequest {
+  id           String    @id @default(uuid())
+  bookingId    String    @unique
+  approved     Boolean   @default(false)
+  refundAmount Decimal   @db.Decimal(10, 2)
+  processedBy  String?
+  createdAt    DateTime  @default(now())
+  processedAt  DateTime?
+
+  // Relations
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  processor User?   @relation("ProcessedBy", fields: [processedBy], references: [id])
+
+  @@index([approved])
+  @@index([createdAt])
 }
