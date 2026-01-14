@@ -179,6 +179,7 @@ model Bus {
 
   @@index([routeId])
   @@index([status])
+  @@index([routeId, status])
 }
 
 model BusDriver {
@@ -245,6 +246,7 @@ model BusAssignment {
   bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade)
 
   @@unique([busId, rideDate, session]) // Prevent duplicate assignments
+  @@index([rideDate, session, bookedCount])
   @@index([rideDate, session])
 }
 
