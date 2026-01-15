@@ -57,7 +57,8 @@ enum RideSession {
 model User {
   id            String   @id @default(uuid())
   clerkUserId  String   @unique
-  fullName      String?
+  lastName      String?
+  firstName     String?
   email         String   @unique
   phoneNumber   String?  @unique
   role          UserRole @default(RIDER)
