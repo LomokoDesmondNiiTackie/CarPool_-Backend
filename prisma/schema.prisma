@@ -56,10 +56,10 @@ enum RideSession {
 
 model User {
   id            String   @id @default(uuid())
+  clerkUserId  String   @unique
   fullName      String?
   email         String   @unique
   phoneNumber   String?  @unique
-  password      String?
   role          UserRole @default(RIDER)
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -75,6 +75,7 @@ model User {
   notifications    Notification[]
   processedRefunds RefundRequest[] @relation("ProcessedBy")
 
+  @@index([clerkUserId])
   @@index([email])
   @@index([phoneNumber])
 }

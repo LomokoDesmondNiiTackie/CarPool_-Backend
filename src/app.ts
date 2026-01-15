@@ -1,10 +1,19 @@
 import express, { Application, Request, Response } from 'express';
+import { clerkMiddleware } from '@clerk/express'
+
+import registrationRouter from './modules/auth/registration/registration.route';
+
 
 const app: Application = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(clerkMiddleware());
+
+
+// AUTH ROUTES
+app.use('/api/v1/auth', registrationRouter);
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
