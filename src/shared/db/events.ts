@@ -1,4 +1,4 @@
 export type CarPoolEventTypes = {
     // EVENT: PROFILE UPDATED
-    'profileUpdated': (data : {userId: string}) => void;
+    'user:profile-updated': (data : {userId: string}) => void;
 }
