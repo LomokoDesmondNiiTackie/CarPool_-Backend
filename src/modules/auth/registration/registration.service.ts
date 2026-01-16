@@ -4,7 +4,8 @@ import { Prisma, UserRole } from '../../../../generated/prisma';
 // TYPE DEFINITIONS
 interface IRegistrationData {
   clerkUserId: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: UserRole;
 }
@@ -14,7 +15,8 @@ interface IRegistrationResponse {
   user: {
     id: string;
     clerkUserId: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: UserRole;
   };
@@ -38,7 +40,7 @@ export class RegistrationError extends Error {
 }
 
 // REGISTRATION SERVICE
-const registrationService = async ({ clerkUserId, fullName, email, role }: IRegistrationData): Promise<IRegistrationResponse> => {
+const registrationService = async ({ clerkUserId, firstName, lastName, email, role }: IRegistrationData): Promise<IRegistrationResponse> => {
   try {
     // CHECK IF USER ALREADY EXISTS
     const existingUser = await prisma.user.findUnique({
@@ -53,7 +55,8 @@ const registrationService = async ({ clerkUserId, fullName, email, role }: IRegi
         user: {
           id: existingUser.id,
           clerkUserId: existingUser.clerkUserId,
-          fullName: existingUser.fullName || '',
+          firstName: existingUser.firstName || '',
+          lastName: existingUser.lastName || '',
           email: existingUser.email,
           role: existingUser.role,
         },
@@ -71,7 +74,8 @@ const registrationService = async ({ clerkUserId, fullName, email, role }: IRegi
       const newUser = await tx.user.create({
         data: {
           clerkUserId,
-          fullName,
+          firstName,
+          lastName,
           email,
           role,
           emailVerified: true,
@@ -95,7 +99,8 @@ const registrationService = async ({ clerkUserId, fullName, email, role }: IRegi
       user: {
         id: result.user.id,
         clerkUserId: result.user.clerkUserId,
-        fullName: result.user.fullName || '',
+        firstName: result.user.firstName || '',
+        lastName: result.user.lastName || '',
         email: result.user.email,
         role: result.user.role,
       },

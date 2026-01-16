@@ -39,14 +39,14 @@ const registrationController = async ( req: Request, res: Response, next: NextFu
     }
 
     // VALIDATE REQUEST BODY
-    const { fullName, role } = req.body;
+    const { firstName, lastName, role } = req.body;
 
-    if (!fullName || !role) {
+    if (!firstName || !lastName || !role) {
       res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'fullName and role are required',
+          message: 'firstName, lastName, and role are required',
         },
       });
       return;
@@ -67,7 +67,8 @@ const registrationController = async ( req: Request, res: Response, next: NextFu
     // CALL SERVICE
     const result = await registrationService({
       clerkUserId: userId,
-      fullName,
+      firstName,
+      lastName,
       email,
       role: role as UserRole,
     });
