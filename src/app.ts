@@ -3,6 +3,13 @@ import { clerkMiddleware } from '@clerk/express'
 
 import registrationRouter from './modules/auth/registration/registration.route';
 import meRouter from './modules/auth/me/me.route';
+import riderUpdateRouter from '@modules/user/rider/update/rider.update.route';
+import riderDeleteRouter from "@modules/user/rider/delete/rider.delete.route"
+import driverUpdateRouter from '@modules/user/driver/update/driver.update.route';
+import driverDeleteRouter from "@modules/user/driver/delete/driver.delete.route";
+import riderProfileRouter from '@modules/user/rider/profile/rider.profile.route';
+import driverProfileRouter from "@modules/user/driver/profile/driver.profile.route";
+
 
 
 const app: Application = express();
@@ -19,6 +26,23 @@ app.use(clerkMiddleware());
 // AUTH ROUTES
 app.use('/api/v1/auth', registrationRouter);
 app.use('/api/v1/auth', meRouter);
+// UPDATE AND DELETE ( RIDER || DRIVER )
+app.use("/api/v1", riderUpdateRouter)
+app.use("/api/v1", riderDeleteRouter)
+app.use("/api/v1", driverUpdateRouter)
+app.use("/api/v1", driverDeleteRouter)
+//RIDER AND DRIVER PROFILE
+app.use("/api/v1", riderProfileRouter)
+app.use("/api/v1", driverProfileRouter)
+
+
+
+
+
+
+
+
+
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {

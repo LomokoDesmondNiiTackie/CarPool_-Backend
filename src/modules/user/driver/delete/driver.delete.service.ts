@@ -7,7 +7,7 @@ export class UserNotFoundError extends Error {
   }
 }
 
-const deleteRiderService = async (userId: string) => {
+const deleteDriverService = async (userId: string) => {
     try {
         // CHECK IF USER EXIST
         const existingUser = prisma.user.findUnique({
@@ -22,7 +22,7 @@ const deleteRiderService = async (userId: string) => {
         const user = await prisma.user.delete({
             where: { id: userId },
             include: {
-                riderProfile: true,
+                driverProfile: true,
                 wallet: true
             }
         });
@@ -41,4 +41,4 @@ const deleteRiderService = async (userId: string) => {
     }
 };
 
-export default deleteRiderService;
+export default deleteDriverService;

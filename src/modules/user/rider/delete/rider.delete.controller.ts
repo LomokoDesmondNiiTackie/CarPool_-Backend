@@ -1,12 +1,11 @@
 import { Response, Request, NextFunction } from 'express';
-import { getAuth } from '@clerk/express';
 import riderDeleteService from './rider.delete.service';
 
 
 export const riderDeleteController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // GET USER ID FROM REQ OBJECT (SET BY AUTH MIDDLEWARE)
-        const { userId } = getAuth(req);
+        // GET USER ID FROM REQ BODY
+        const { userId } = req.body;
 
         // CHECK AUTHENTICATION
         if (!userId) {

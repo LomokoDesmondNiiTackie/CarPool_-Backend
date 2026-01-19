@@ -1,52 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
-import { clerkClient, getAuth } from '@clerk/express';
 import registrationService from './registration.service';
 import { UserRole } from '../../../../generated/prisma';
 
 const registrationController = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
   try {
-    // GET CLERK USER ID
-    const { userId } = getAuth(req);
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required',
-        },
-      });
-      return;
-    }
-
-    // GET CLERK USER DATA
-    const clerkUser = await clerkClient.users.getUser(userId);
-
-    // Extract email (Clerk stores emails in an array)
-    const email = clerkUser.emailAddresses.find(
-      (e) => e.id === clerkUser.primaryEmailAddressId
-    )?.emailAddress;
-
-    if (!email) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'EMAIL_REQUIRED',
-          message: 'Email not found in Clerk account',
-        },
-      });
-      return;
-    }
-
     // VALIDATE REQUEST BODY
-    const { firstName, lastName, role } = req.body;
+    const { firstName, lastName, email, role } = req.body;
 
-    if (!firstName || !lastName || !role) {
+    if (!firstName || !lastName || !email || !role) {
       res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'firstName, lastName, and role are required',
+          message: 'firstName, lastName, email, and role are required',
         },
       });
       return;
@@ -66,7 +32,6 @@ const registrationController = async ( req: Request, res: Response, next: NextFu
 
     // CALL SERVICE
     const result = await registrationService({
-      clerkUserId: userId,
       firstName,
       lastName,
       email,

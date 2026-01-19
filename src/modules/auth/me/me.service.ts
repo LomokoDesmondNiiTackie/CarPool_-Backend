@@ -10,7 +10,8 @@ export class UserNotFoundError extends Error {
 interface IUserProfile {
   id: string;
   clerkUserId: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phoneNumber: string | null;
   role: string;
@@ -29,14 +30,15 @@ interface IUserProfile {
   };
 }
 
-const getCurrentUserService = async (clerkUserId: string): Promise<IUserProfile> => {
+const getCurrentUserService = async (email: string): Promise<IUserProfile> => {
   // FETCH USER FROM DATABASE
   const user = await prisma.user.findUnique({
-    where: { clerkUserId },
+    where: { email },
     select: {
       id: true,
       clerkUserId: true,
-      fullName: true,
+      firstName: true,
+      lastName: true,
       email: true,
       phoneNumber: true,
       role: true,
@@ -64,7 +66,7 @@ const getCurrentUserService = async (clerkUserId: string): Promise<IUserProfile>
 
   // USER NOT REGISTERED IN DATABASE
   if (!user) {
-    throw new UserNotFoundError(clerkUserId);
+    throw new UserNotFoundError(email);
   }
 
   // UPDATE LAST LOGIN TIME
@@ -77,7 +79,8 @@ const getCurrentUserService = async (clerkUserId: string): Promise<IUserProfile>
   return {
     id: user.id,
     clerkUserId: user.clerkUserId,
-    fullName: user.fullName || '',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
     email: user.email,
     phoneNumber: user.phoneNumber,
     role: user.role,

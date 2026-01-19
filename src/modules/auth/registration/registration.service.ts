@@ -3,7 +3,7 @@ import { Prisma, UserRole } from '../../../../generated/prisma';
 
 // TYPE DEFINITIONS
 interface IRegistrationData {
-  clerkUserId: string;
+  clerkUserId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -40,11 +40,11 @@ export class RegistrationError extends Error {
 }
 
 // REGISTRATION SERVICE
-const registrationService = async ({ clerkUserId, firstName, lastName, email, role }: IRegistrationData): Promise<IRegistrationResponse> => {
+const registrationService = async ({ clerkUserId,firstName, lastName, email, role }: IRegistrationData): Promise<IRegistrationResponse> => {
   try {
     // CHECK IF USER ALREADY EXISTS
     const existingUser = await prisma.user.findUnique({
-      where: { clerkUserId },
+      where: { email },
       include: { wallet: true },
     });
 
@@ -73,7 +73,7 @@ const registrationService = async ({ clerkUserId, firstName, lastName, email, ro
       // Create user
       const newUser = await tx.user.create({
         data: {
-          clerkUserId,
+          clerkUserId: clerkUserId || "",
           firstName,
           lastName,
           email,
@@ -82,13 +82,14 @@ const registrationService = async ({ clerkUserId, firstName, lastName, email, ro
         },
       });
 
-      // Create wallet for user
+      // CREATE WALLET FOR USER
       const newWallet = await tx.wallet.create({
         data: {
           userId: newUser.id,
           balance: 0.0,
         },
       });
+
 
       return { user: newUser, wallet: newWallet };
     });

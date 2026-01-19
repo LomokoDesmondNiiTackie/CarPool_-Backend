@@ -1,26 +1,13 @@
 import { Response, Request, NextFunction } from 'express';
-import { getAuth } from '@clerk/express';
 import getCurrentUserService, { UserNotFoundError } from './me.service';
 
 const getCurrentUserController = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
   try {
-    // GET CLERK USER ID
-    const { userId } = getAuth(req);
-
-    // CHECK AUTHENTICATION
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required',
-        },
-      });
-      return;
-    }
+    // GET USER DATA FROM REQUEST
+    const { email } = req.body;
 
     // FETCH USER PROFILE FROM SERVICE
-    const userProfile = await getCurrentUserService(userId);
+    const userProfile = await getCurrentUserService(email);
 
     // RETURN SUCCESS RESPONSE
     res.status(200).json({

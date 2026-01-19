@@ -1,15 +1,15 @@
 import { Response, Request, NextFunction } from 'express';
-import updateRiderService  from './rider.update.service';
+import updateDriverService  from './driver.update.service';
 
 
 
-export const updateRiderController = async (req: Request, res: Response, next: NextFunction) => {
+export const updateDriverController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // EXTRACT UPDATE DATA FROM REQ BODY
-        const { userId,firstName, lastName, phoneNumber, homeLatitude, homeLongitude, workplaceLatitude, workplaceLongitude, preferredBusStopId } = req.body;
+        const { userId,firstName, lastName, phoneNumber, companyName, licenseNumber } = req.body;
 
         // CHECK IF AT LEAST ONE FIELD IS PROVIDED
-        if (!firstName && !lastName && !phoneNumber && homeLatitude === undefined && homeLongitude === undefined && workplaceLatitude === undefined && workplaceLongitude === undefined && !preferredBusStopId ) {
+        if (!firstName && !lastName && !phoneNumber && companyName === undefined && licenseNumber === undefined ) {
         res.status(400).json({
             success: false,
             error: {
@@ -21,7 +21,7 @@ export const updateRiderController = async (req: Request, res: Response, next: N
         }
 
         // CALL SERVICE TO UPDATE RIDER INFORMATION
-        const updatedUser = await updateRiderService(userId, { firstName, lastName, phoneNumber, homeLatitude, homeLongitude, workplaceLatitude, workplaceLongitude, preferredBusStopId });
+        const updatedUser = await updateDriverService(userId, { firstName, lastName, phoneNumber, companyName, licenseNumber });
 
         // RETURN SUCCESS RESPONSE
         res.status(200).json({
