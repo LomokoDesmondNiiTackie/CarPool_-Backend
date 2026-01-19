@@ -9,6 +9,7 @@ import driverUpdateRouter from '@modules/user/driver/update/driver.update.route'
 import driverDeleteRouter from "@modules/user/driver/delete/driver.delete.route";
 import riderProfileRouter from '@modules/user/rider/profile/rider.profile.route';
 import driverProfileRouter from "@modules/user/driver/profile/driver.profile.route";
+import bookRoute from '@modules/bookings/book/book.route';
 
 
 
@@ -34,6 +35,8 @@ app.use("/api/v1", driverDeleteRouter)
 //RIDER AND DRIVER PROFILE
 app.use("/api/v1", riderProfileRouter)
 app.use("/api/v1", driverProfileRouter)
+// BOOKING ROUTES
+app.use('/api/v1', bookRoute);
 
 
 

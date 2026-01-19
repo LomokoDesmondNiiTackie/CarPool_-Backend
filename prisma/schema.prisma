@@ -213,6 +213,7 @@ model Booking {
   rideDate    DateTime      @db.Date
   status      BookingStatus @default(PENDING)
   qrToken     String?       @unique
+  rawToken    String?       @unique
   createdAt   DateTime      @default(now())
 
   // Relations
